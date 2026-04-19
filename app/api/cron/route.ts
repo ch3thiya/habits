@@ -11,10 +11,12 @@ export async function GET(request: Request) {
     // Get current time in Sri Lanka (IST/GMT+5:30)
     const now = new Date();
     const options = { timeZone: 'Asia/Colombo', hour12: false };
-    const lkTimeStr = now.toLocaleString('en-US', options); // "M/D/YYYY, HH:mm:ss"
-    const lkDate = new Date(lkTimeStr);
-
-    const currentHour = lkDate.getHours().toString().padStart(2, '0');
+    const lkTimeStr = now.toLocaleString('en-US', options); // "4/19/2026, 18:15:30"
+    
+    // Extract hour from the formatted string
+    // Format is "M/D/YYYY, HH:mm:ss"
+    const parts = lkTimeStr.split(', ')[1].split(':'); // ["18", "15", "30"]
+    const currentHour = parts[0].padStart(2, '0');
 
     const { data: reminders } = await supabase
       .from('reminders')
@@ -23,7 +25,7 @@ export async function GET(request: Request) {
       .like('time', `${currentHour}:%`);
 
     if (!reminders || reminders.length === 0) {
-      console.log(`[CRON DEBUG] No active reminders found for hour ${currentHour}`);
+      console.log(`[CRON DEBUG] No active reminders found for hour ${currentHour} (LK time)`);
       return NextResponse.json({ message: 'No reminders to send at this time.' });
     }
 
@@ -36,8 +38,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Telegram credentials missing.' }, { status: 500 });
     }
 
-    const currentDayOfWeek = lkDate.getDay(); // 0 is Sunday
-    // For every other day, we use the Epoch days since Jan 1 1970
+    // Get day of week for weekly reminders (0 = Sunday in JS)
+    // We need to get this from the LK timezone too
+    const dayFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Colombo', weekday: 'long' });
+    const dayName = dayFormatter.format(now);
+    const dayMap: Record<string, number> = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+    const currentDayOfWeek = dayMap[dayName];
+    
+    // For every other day, we use the Epoch days since Jan 1 1970 in LK timezone
+    const lkDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
     const epochDays = Math.floor(lkDate.getTime() / (1000 * 60 * 60 * 24));
 
     const sendPromises = reminders.filter(reminder => {
