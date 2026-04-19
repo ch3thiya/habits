@@ -42,12 +42,16 @@ export async function deleteHabit(id: string) {
 }
 
 export async function saveReminder(habitId: string, time: string, frequency: 'daily' | 'weekly' | 'every_other_day', daysOfWeek: number[], active: boolean) {
+  console.log(`[SAVE REMINDER] Saving reminder for habit ${habitId}: time=${time}, frequency=${frequency}, active=${active}`);
+  
   // We'll just upsert: if one exists for the habit, update it. For minimum single-user usage, 1 reminder per habit is enough.
   const { data: existing } = await supabase.from('reminders').select('id').eq('habit_id', habitId).single();
   
   if (existing) {
+    console.log(`[SAVE REMINDER] Updating existing reminder ${existing.id}`);
     await supabase.from('reminders').update({ time, frequency, days_of_week: daysOfWeek, active }).eq('id', existing.id);
   } else {
+    console.log(`[SAVE REMINDER] Creating new reminder`);
     await supabase.from('reminders').insert({ habit_id: habitId, time, frequency, days_of_week: daysOfWeek, active });
   }
   revalidatePath('/');
