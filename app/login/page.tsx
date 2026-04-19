@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 selection:bg-neutral-800">
       <div className="w-full max-w-sm">
         <h1 className="text-xl font-medium text-neutral-200 mb-8 flex items-center gap-2">
-          <Image src="/heart red.webp" alt="Heart" width={20} height={20} className="w-6 h-6 opacity-100 block" unoptimized />
+          <Image src="/heart-red.webp" alt="Heart" width={20} height={20} className="w-6 h-6 opacity-100 block" unoptimized />
           Habits
         </h1>
         <form onSubmit={handleSubmit} className="relative">

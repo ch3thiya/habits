@@ -162,35 +162,6 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
           </button>
         </div>
 
-        <AnimatePresence>
-          {isAdding && (
-            <motion.form 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              onSubmit={handleAdd} 
-              className="mb-8 overflow-hidden relative"
-            >
-              <input
-                autoFocus
-                disabled={isAddingHabit}
-                type="text"
-                placeholder="New Habit Name..."
-                value={addingName}
-                onChange={e => setAddingName(e.target.value)}
-                className="w-full bg-neutral-900 text-sm px-4 py-3 pr-12 rounded-md border border-neutral-800 focus:border-neutral-500 outline-none transition-colors disabled:opacity-50"
-              />
-              <button 
-                type="submit" 
-                disabled={!addingName.trim() || isAddingHabit}
-                className="absolute right-2 top-1.5 bottom-1.5 w-10 flex items-center justify-center bg-neutral-800 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
-              >
-                {isAddingHabit ? <Loader2 size={16} className="animate-spin text-neutral-400" /> : <Plus size={16} />}
-              </button>
-            </motion.form>
-          )}
-        </AnimatePresence>
-
         <div className={cn("grid gap-4 sm:gap-6", (view === '30d' || view === 'monthly') && "md:grid-cols-2 md:gap-8")}>
           {habits.length === 0 && (
              <div className="text-neutral-600 text-sm py-4 italic col-span-full">No habits tracking yet. Press cmd+k to add one.</div>
@@ -334,6 +305,45 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
                   Delete
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isAdding && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl w-full max-w-sm flex flex-col gap-6"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-neutral-200 font-medium">New Habit</h3>
+                <button onClick={() => setIsAdding(false)} className="text-neutral-500 hover:text-neutral-300">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleAdd} className="relative flex items-center">
+                <input
+                  autoFocus
+                  disabled={isAddingHabit}
+                  type="text"
+                  placeholder="Habit Name..."
+                  value={addingName}
+                  onChange={e => setAddingName(e.target.value)}
+                  className="w-full bg-black text-sm px-4 py-3 pr-12 rounded-md border border-neutral-800 focus:border-neutral-500 outline-none transition-colors disabled:opacity-50"
+                />
+                <button 
+                  type="submit" 
+                  disabled={!addingName.trim() || isAddingHabit}
+                  className="absolute right-2 w-8 h-8 flex items-center justify-center bg-neutral-800 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
+                >
+                  {isAddingHabit ? <Loader2 size={16} className="animate-spin text-neutral-400" /> : <Plus size={16} />}
+                </button>
+              </form>
             </motion.div>
           </div>
         )}
