@@ -23,8 +23,11 @@ export async function GET(request: Request) {
       .like('time', `${currentHour}:%`);
 
     if (!reminders || reminders.length === 0) {
+      console.log(`[CRON DEBUG] No active reminders found for hour ${currentHour}`);
       return NextResponse.json({ message: 'No reminders to send at this time.' });
     }
+
+    console.log(`[CRON DEBUG] Found ${reminders.length} reminders for hour ${currentHour}:`, reminders);
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
