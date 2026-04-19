@@ -15,14 +15,12 @@ export async function GET(request: Request) {
     const lkDate = new Date(lkTimeStr);
 
     const currentHour = lkDate.getHours().toString().padStart(2, '0');
-    const currentMinute = lkDate.getMinutes().toString().padStart(2, '0');
-    const currentTimeString = `${currentHour}:${currentMinute}`;
 
     const { data: reminders } = await supabase
       .from('reminders')
       .select('*, habits(*)')
       .eq('active', true)
-      .like('time', `${currentTimeString}%`);
+      .like('time', `${currentHour}:%`);
 
     if (!reminders || reminders.length === 0) {
       return NextResponse.json({ message: 'No reminders to send at this time.' });
