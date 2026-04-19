@@ -28,11 +28,8 @@ export async function GET(request: Request) {
     });
 
     if (!activeReminders || activeReminders.length === 0) {
-      console.log(`[CRON DEBUG] No active reminders found for hour ${currentHour}`);
       return NextResponse.json({ message: 'No reminders to send at this time.' });
     }
-
-    console.log(`[CRON DEBUG] Found ${activeReminders.length} reminders for hour ${currentHour}:`, activeReminders);
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -69,7 +66,7 @@ export async function GET(request: Request) {
 
     await Promise.all(sendPromises);
 
-    return NextResponse.json({ success: true, count: reminders.length });
+    return NextResponse.json({ success: true, count: activeReminders.length });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
