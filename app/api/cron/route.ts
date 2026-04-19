@@ -51,7 +51,7 @@ export async function GET(request: Request) {
       if (reminder.frequency === 'weekly' && reminder.days_of_week?.includes(currentDayOfWeek)) return true;
       return false;
     }).map(async (reminder) => {
-      const text = `🔔 Reminder: Time to complete "${reminder.habits?.name}"!`;
+      const text = `Reminder: Time for ${reminder.habits?.name}!`;
       
       return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
