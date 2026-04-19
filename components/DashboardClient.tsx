@@ -5,7 +5,7 @@ import { HabitWithLogs } from '@/types';
 import { format, subDays, isToday, differenceInDays } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Plus, Trash2, CheckCircle2, Bell, X, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Bell, X, ChevronDown, Loader2 } from 'lucide-react';
 import { toggleHabitLog, addHabit, deleteHabit, saveReminder } from '@/app/actions/habits';
 
 export default function DashboardClient({ initialHabits }: { initialHabits: HabitWithLogs[] }) {
@@ -14,10 +14,12 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
   const [isAdding, setIsAdding] = useState(false);
   const [activeReminderPopup, setActiveReminderPopup] = useState<string | null>(null);
   const [habitToDelete, setHabitToDelete] = useState<string | null>(null);
+  const [isAddingHabit, setIsAddingHabit] = useState(false);
 
   // Sync with server when initialHabits changes (e.g. via revalidatePath)
   useEffect(() => {
     setHabits(initialHabits);
+    setIsAddingHabit(false);
   }, [initialHabits]);
 
   // Keyboard shortcut for adding
@@ -70,12 +72,14 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
     e.preventDefault();
     if (!addingName.trim()) return;
     
+    setIsAddingHabit(true);
     const nameToAdd = addingName.trim();
-    setIsAdding(false);
-    setAddingName('');
     
     await addHabit(nameToAdd);
     // Component will naturally animate the new item when Server Action's revalidatePath settles
+    setIsAdding(false);
+    setAddingName('');
+    setIsAddingHabit(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -165,21 +169,29 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               onSubmit={handleAdd} 
-              className="mb-8 overflow-hidden"
+              className="mb-8 overflow-hidden relative"
             >
               <input
                 autoFocus
+                disabled={isAddingHabit}
                 type="text"
                 placeholder="New Habit Name..."
                 value={addingName}
                 onChange={e => setAddingName(e.target.value)}
-                className="w-full bg-neutral-900 text-sm px-4 py-3 rounded-md border border-neutral-800 focus:border-neutral-500 outline-none transition-colors"
+                className="w-full bg-neutral-900 text-sm px-4 py-3 pr-12 rounded-md border border-neutral-800 focus:border-neutral-500 outline-none transition-colors disabled:opacity-50"
               />
+              <button 
+                type="submit" 
+                disabled={!addingName.trim() || isAddingHabit}
+                className="absolute right-2 top-1.5 bottom-1.5 w-10 flex items-center justify-center bg-neutral-800 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
+              >
+                {isAddingHabit ? <Loader2 size={16} className="animate-spin text-neutral-400" /> : <Plus size={16} />}
+              </button>
             </motion.form>
           )}
         </AnimatePresence>
 
-        <div className={cn("grid gap-6", (view === '30d' || view === 'monthly') && "md:grid-cols-2 md:gap-8")}>
+        <div className={cn("grid gap-4 sm:gap-6", (view === '30d' || view === 'monthly') && "md:grid-cols-2 md:gap-8")}>
           {habits.length === 0 && (
              <div className="text-neutral-600 text-sm py-4 italic col-span-full">No habits tracking yet. Press cmd+k to add one.</div>
           )}
@@ -206,7 +218,15 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
                   <div className="flex-1 flex flex-col justify-center">
                   <div className="flex items-center gap-3 relative">
                     <span className="font-medium text-neutral-200">{habit.name}</span>
-                    <button onClick={() => setActiveReminderPopup(habit.id)} className={cn("text-neutral-600 hover:text-neutral-400 transition-all", activeReminderPopup !== habit.id && "opacity-100 sm:opacity-0 sm:group-hover:opacity-100", habit.reminders && habit.reminders.length > 0 && habit.reminders[0].active && "opacity-100 text-neutral-300")}>
+                    <button 
+                      onClick={() => setActiveReminderPopup(habit.id)} 
+                      className={cn(
+                        "transition-all", 
+                        habit.reminders && habit.reminders.length > 0 && habit.reminders[0].active 
+                          ? "opacity-100 text-neutral-300" 
+                          : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-neutral-600 hover:text-neutral-400"
+                      )}
+                    >
                       <Bell size={14} />
                     </button>
                     <button onClick={() => setHabitToDelete(habit.id)} className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-neutral-600 hover:text-red-900/80 transition-all">
@@ -459,9 +479,9 @@ function ReminderModal({
         <button 
           onClick={handleSave} 
           disabled={saving || (frequency === 'weekly' && days.length === 0)}
-          className="bg-neutral-200 text-neutral-950 font-medium py-2 rounded-md hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-neutral-200 text-neutral-950 font-medium py-2 rounded-md hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {saving ? 'Saving...' : 'Save Reminder'}
+          {saving ? <Loader2 size={18} className="animate-spin text-neutral-600" /> : 'Save Reminder'}
         </button>
 
       </motion.div>
