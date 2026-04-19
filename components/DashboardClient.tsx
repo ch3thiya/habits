@@ -381,7 +381,9 @@ function ReminderModal({
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave(habit.id, `${time}:00`, frequency, days, active);
+    // Only pass days_of_week when frequency is 'weekly', otherwise pass empty array
+    const daysToSave = frequency === 'weekly' ? days : [];
+    await onSave(habit.id, `${time}:00`, frequency, daysToSave, active);
     setSaving(false);
     onClose();
   };
@@ -489,7 +491,7 @@ function ReminderModal({
         <button 
           onClick={handleSave} 
           disabled={saving || (frequency === 'weekly' && days.length === 0)}
-          className="bg-neutral-200 text-neutral-950 font-medium py-2 rounded-md hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="bg-neutral-200 text-neutral-950 font-medium h-10 rounded-md hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {saving ? <Loader2 size={18} className="animate-spin text-neutral-600" /> : 'Save Reminder'}
         </button>
