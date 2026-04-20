@@ -7,7 +7,7 @@ import { format, subDays } from 'date-fns';
 
 export async function getHabitsData(): Promise<HabitWithLogs[]> {
   const [{ data: habits }, { data: logs }, { data: reminders }] = await Promise.all([
-    supabase.from('habits').select('*').order('display_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
+    supabase.from('habits').select('*').order('display_order', { ascending: true }).order('created_at', { ascending: true }),
     supabase.from('habit_logs').select('*'),
     supabase.from('reminders').select('*'),
   ]);

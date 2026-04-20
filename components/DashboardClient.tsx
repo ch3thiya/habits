@@ -208,7 +208,7 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
             axis="y" 
             values={habits} 
             onReorder={handleReorder} 
-            className={cn("col-span-full grid gap-4 sm:gap-6", (view === '30d' || view === 'monthly') && "md:grid-cols-2 md:gap-8")}
+            className={cn("col-span-full grid gap-4 sm:gap-4", (view === '30d' || view === 'monthly') && "md:grid-cols-2 md:gap-8")}
           >
             <AnimatePresence mode="popLayout">
               {habits.map((habit) => {
