@@ -2,6 +2,7 @@ export type Habit = {
   id: string;
   name: string;
   created_at: string;
+  display_order?: number;
 };
 
 export type HabitLog = {

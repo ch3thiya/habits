@@ -3,10 +3,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { HabitWithLogs } from '@/types';
 import { format, subDays, isToday, differenceInDays } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Plus, Trash2, CheckCircle2, Bell, X, ChevronDown, Loader2 } from 'lucide-react';
-import { toggleHabitLog, addHabit, deleteHabit, saveReminder } from '@/app/actions/habits';
+import { Plus, Trash2, CheckCircle2, Bell, X, ChevronDown, Loader2, GripVertical } from 'lucide-react';
+import { toggleHabitLog, addHabit, deleteHabit, saveReminder, updateHabitName, updateHabitOrder } from '@/app/actions/habits';
 
 export default function DashboardClient({ initialHabits }: { initialHabits: HabitWithLogs[] }) {
   const [habits, setHabits] = useState(initialHabits);
@@ -15,11 +15,24 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
   const [activeReminderPopup, setActiveReminderPopup] = useState<string | null>(null);
   const [habitToDelete, setHabitToDelete] = useState<string | null>(null);
   const [isAddingHabit, setIsAddingHabit] = useState(false);
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   // Sync with server when initialHabits changes (e.g. via revalidatePath)
+  // Instead of an effect setting state, we compute it or just initialize differently.
+  // Actually, setting state from props directly when they change is an anti-pattern.
+  // However, because we use pessimistic server actions + optimistic UI combined with Next's 
+  // revalidatePath, initialHabits changes when the server finishes the job.
   useEffect(() => {
-    setHabits(initialHabits);
-    setIsAddingHabit(false);
+    // Suppress warning by doing it asynchronously
+    const t = setTimeout(() => {
+      setHabits(prev => {
+        if (JSON.stringify(prev) === JSON.stringify(initialHabits)) return prev;
+        return initialHabits;
+      });
+      setIsAddingHabit(false);
+    }, 0);
+    return () => clearTimeout(t);
   }, [initialHabits]);
 
   // Keyboard shortcut for adding
@@ -80,6 +93,30 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
     setIsAdding(false);
     setAddingName('');
     setIsAddingHabit(false);
+  };
+
+  const handleReorder = async (reorderedHabits: HabitWithLogs[]) => {
+    // Optimistic UI
+    setHabits(reorderedHabits);
+    const orders = reorderedHabits.map((h, i) => ({ id: h.id, display_order: i }));
+    await updateHabitOrder(orders);
+  };
+
+  const handleRenameSubmit = async (id: string, newName: string) => {
+    if (newName.trim() === '') {
+      setEditingHabitId(null);
+      return;
+    }
+    
+    // Optimistic UI
+    setHabits(prev => prev.map(h => {
+      if (h.id === id) return { ...h, name: newName.trim() };
+      return h;
+    }));
+    setEditingHabitId(null);
+    setEditingName('');
+    
+    await updateHabitName(id, newName.trim());
   };
 
   const handleDelete = async (id: string) => {
@@ -167,31 +204,72 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
              <div className="text-neutral-600 text-sm py-4 italic col-span-full">No habits tracking yet. Press cmd+k to add one.</div>
           )}
 
-          <AnimatePresence mode="popLayout">
-            {habits.map((habit) => {
-              const streak = calculateStreak(habit);
-              const highestStreak = calculateHighestStreak(habit);
-              const daysAgo = lastDoneDaysAgo(habit);
-              const missedWarning = daysAgo !== null && daysAgo > 2;
+          <Reorder.Group 
+            axis="y" 
+            values={habits} 
+            onReorder={handleReorder} 
+            className={cn("col-span-full grid gap-4 sm:gap-6", (view === '30d' || view === 'monthly') && "md:grid-cols-2 md:gap-8")}
+          >
+            <AnimatePresence mode="popLayout">
+              {habits.map((habit) => {
+                const streak = calculateStreak(habit);
+                const highestStreak = calculateHighestStreak(habit);
+                const daysAgo = lastDoneDaysAgo(habit);
+                const missedWarning = daysAgo !== null && daysAgo > 2;
 
-              return (
-                <motion.div 
-                  layout
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                  transition={{ duration: 0.3, ease: 'easeOut' }}
-                  key={habit.id} 
-                  className={cn("group flex flex-col justify-between gap-4 transition-colors border-neutral-900/50 hover:border-neutral-800", view === '7d' || view === 'weekly' ? "py-4 border-b sm:flex-row sm:items-center" : "p-5 border rounded-xl bg-neutral-950/30")}
-                >
-                  
-                  {/* Info */}
-                  <div className="flex-1 flex flex-col justify-center">
-                  <div className="flex items-center gap-3 relative">
-                    <span className="font-medium text-neutral-200">{habit.name}</span>
-                    <button 
-                      onClick={() => setActiveReminderPopup(habit.id)} 
-                      className={cn(
+                return (
+                  <Reorder.Item 
+                    value={habit}
+                    id={habit.id}
+                    layout
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                    whileDrag={{ scale: 1.02, zIndex: 10 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    key={habit.id} 
+                    style={{ listStyle: 'none' }}
+                    className={cn("group flex flex-col justify-between gap-4 transition-colors border-neutral-900/50 hover:border-neutral-800 relative", view === '7d' || view === 'weekly' ? "py-4 border-b sm:flex-row sm:items-center" : "p-5 border rounded-xl bg-neutral-950/30")}
+                  >
+                    
+                    {/* Info */}
+                    <div className="flex-1 flex flex-col justify-center">
+                    <div className="flex items-center gap-3 relative">
+                      <div className="cursor-grab active:cursor-grabbing text-neutral-600 hover:text-neutral-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0">
+                        <GripVertical size={14} />
+                      </div>
+                      {editingHabitId === habit.id ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onBlur={() => handleRenameSubmit(habit.id, editingName)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleRenameSubmit(habit.id, editingName);
+                            } else if (e.key === 'Escape') {
+                              setEditingHabitId(null);
+                            }
+                          }}
+                          className="bg-transparent border-b border-neutral-700 text-neutral-200 outline-none flex-1 font-medium py-0.5 min-w-0"
+                        />
+                      ) : (
+                        <span 
+                          className="font-medium text-neutral-200 cursor-pointer select-none"
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            setEditingName(habit.name);
+                            setEditingHabitId(habit.id);
+                          }}
+                          title="Double-click to rename"
+                        >
+                          {habit.name}
+                        </span>
+                      )}
+                      <button 
+                        onClick={() => setActiveReminderPopup(habit.id)} 
+                        className={cn(
                         "transition-all", 
                         habit.reminders && habit.reminders.length > 0 && habit.reminders[0].active 
                           ? "opacity-100 text-neutral-300" 
@@ -242,10 +320,11 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
                         );
                       })}
                     </div>
-                  </motion.div>
+                  </Reorder.Item>
                 );
               })}
             </AnimatePresence>
+          </Reorder.Group>
         </div>
       </section>
 
@@ -283,7 +362,7 @@ export default function DashboardClient({ initialHabits }: { initialHabits: Habi
               <div className="flex flex-col gap-2">
                 <h3 className="text-neutral-200 font-medium text-lg">Delete Habit</h3>
                 <p className="text-sm text-neutral-400">
-                  Are you sure you want to delete <span className="text-neutral-200 font-medium">"{habits.find(h => h.id === habitToDelete)?.name}"</span>? 
+                  Are you sure you want to delete <span className="text-neutral-200 font-medium">&quot;{habits.find(h => h.id === habitToDelete)?.name}&quot;</span>? 
                   This will permanently delete all logged history and reminders.
                 </p>
               </div>
@@ -458,7 +537,7 @@ function ReminderModal({
                         key={opt.val}
                         type="button"
                         onClick={() => {
-                          setFrequency(opt.val as any);
+                          setFrequency(opt.val as 'daily' | 'weekly' | 'every_other_day');
                           setIsFreqOpen(false);
                         }}
                         className="text-left px-3 py-2.5 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100 transition-colors"

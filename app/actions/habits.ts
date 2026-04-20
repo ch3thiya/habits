@@ -7,7 +7,7 @@ import { format, subDays } from 'date-fns';
 
 export async function getHabitsData(): Promise<HabitWithLogs[]> {
   const [{ data: habits }, { data: logs }, { data: reminders }] = await Promise.all([
-    supabase.from('habits').select('*').order('created_at', { ascending: true }),
+    supabase.from('habits').select('*').order('display_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
     supabase.from('habit_logs').select('*'),
     supabase.from('reminders').select('*'),
   ]);
@@ -33,6 +33,25 @@ export async function getHabitsData(): Promise<HabitWithLogs[]> {
 export async function addHabit(name: string) {
   if (!name.trim()) return;
   await supabase.from('habits').insert({ name: name.trim() });
+  revalidatePath('/');
+}
+
+export async function updateHabitName(id: string, name: string) {
+  if (!name.trim()) return;
+  await supabase.from('habits').update({ name: name.trim() }).eq('id', id);
+  revalidatePath('/');
+}
+
+export async function updateHabitOrder(orders: { id: string, display_order: number }[]) {
+  // Supabase JS doesn't support bulk update natively for multiple rows with different values easily
+  // without an RPC or upsert. Upsert works if we provide the primary key.
+  // Assuming all other fields (name, created_at) are intact or we just use individual updates 
+  // since habits list is small.
+  await Promise.all(
+    orders.map(order => 
+      supabase.from('habits').update({ display_order: order.display_order }).eq('id', order.id)
+    )
+  );
   revalidatePath('/');
 }
 
