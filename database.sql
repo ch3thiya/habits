@@ -27,6 +27,24 @@ CREATE TABLE reminders (
   days_of_week INTEGER[] DEFAULT '{}'
 );
 
+-- Create tasks table
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  deadline DATE,
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Create journals table
+CREATE TABLE journals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  content TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Set up Row Level Security (RLS)
 -- Since it's a single user app with password protection on the Next.js side,
 -- we can allow anonymous access IF you only use the anon key on the server 
@@ -37,7 +55,11 @@ CREATE TABLE reminders (
 ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE habit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE journals ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all access to habits" ON habits FOR ALL USING (true);
 CREATE POLICY "Allow all access to habit_logs" ON habit_logs FOR ALL USING (true);
 CREATE POLICY "Allow all access to reminders" ON reminders FOR ALL USING (true);
+CREATE POLICY "Allow all access to tasks" ON tasks FOR ALL USING (true);
+CREATE POLICY "Allow all access to journals" ON journals FOR ALL USING (true);
