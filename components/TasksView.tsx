@@ -12,11 +12,13 @@ import { CalendarPicker } from './CalendarPicker';
 function TaskItem({ 
   task, 
   onDeleteRequest, 
+  onComplete,
   onUpdateTitle,
   onUpdateDeadline
 }: { 
   task: Task; 
   onDeleteRequest: (id: string, title: string) => void;
+  onComplete: (id: string) => void;
   onUpdateTitle: (id: string, title: string) => void;
   onUpdateDeadline: (id: string, deadline: string | null) => void;
 }) {
@@ -60,7 +62,7 @@ function TaskItem({
         
         <motion.button
           whileTap={{ scale: 0.85 }}
-          onClick={() => onDeleteRequest(task.id, task.title)}
+          onClick={() => onComplete(task.id)}
           className="w-5 h-5 rounded-[4px] border border-neutral-600 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all duration-200 flex items-center justify-center cursor-pointer flex-shrink-0 group/btn"
           title="Mark Done"
         >
@@ -213,6 +215,11 @@ export default function TasksView({ initialTasks }: { initialTasks: Task[] }) {
     setTaskToDelete(null);
   };
 
+  const handleComplete = async (id: string) => {
+    setTasks(prev => prev.filter(t => t.id !== id));
+    await deleteTask(id);
+  };
+
   const handleUpdateTitle = async (id: string, title: string) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, title } : t));
     await updateTaskTitle(id, title);
@@ -360,6 +367,7 @@ export default function TasksView({ initialTasks }: { initialTasks: Task[] }) {
                 key={task.id} 
                 task={task} 
                 onDeleteRequest={(id, title) => setTaskToDelete({id, title})}
+                onComplete={handleComplete}
                 onUpdateTitle={handleUpdateTitle}
                 onUpdateDeadline={handleUpdateDeadline}
               />
