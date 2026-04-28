@@ -24,6 +24,9 @@ function RichTextEditor({ content, onUpdate }: { content: string, onUpdate: (val
       Link.configure({
         openOnClick: false,
         autolink: true,
+        HTMLAttributes: {
+          class: 'underline text-emerald-400 hover:text-emerald-300',
+        },
       }),
     ],
     content,
@@ -62,6 +65,12 @@ function RichTextEditor({ content, onUpdate }: { content: string, onUpdate: (val
           className={cn("px-2 py-1 text-xs rounded hover:bg-neutral-800 transition-colors", editor.isActive('bulletList') ? 'bg-neutral-800 text-neutral-200' : 'text-neutral-400')}
         >
           Bullet List
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className={cn("px-2 py-1 text-xs rounded hover:bg-neutral-800 transition-colors", editor.isActive('orderedList') ? 'bg-neutral-800 text-neutral-200' : 'text-neutral-400')}
+        >
+          Numbered List
         </button>
       </div>
       <EditorContent editor={editor} />
