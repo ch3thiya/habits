@@ -30,8 +30,13 @@ export function CalendarPicker({
   const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 w-[280px] shadow-xl text-neutral-200 z-50">
-      <div className="flex items-center justify-between mb-4">
+    <>
+      <div 
+        className="fixed inset-0 z-40" 
+        onClick={onClose} 
+      />
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 w-[280px] shadow-xl text-neutral-200 z-50 relative">
+        <div className="flex items-center justify-between mb-4">
         <button type="button" onClick={handlePrevMonth} className="text-neutral-500 hover:text-neutral-300 p-1">
           <ChevronLeft size={16} />
         </button>

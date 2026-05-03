@@ -14,13 +14,14 @@ export async function getJournalsData(): Promise<Journal[]> {
 }
 
 export async function addJournal(title: string, content: string = '') {
-  if (!title.trim()) return;
-  await supabase.from('journals').insert({ 
+  if (!title.trim()) return null;
+  const { data } = await supabase.from('journals').insert({ 
     title: title.trim(), 
     content,
     updated_at: new Date().toISOString()
-  });
+  }).select().single();
   revalidatePath('/');
+  return data as Journal;
 }
 
 export async function updateJournal(id: string, title: string, content: string) {

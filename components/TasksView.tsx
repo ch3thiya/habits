@@ -140,7 +140,7 @@ function TaskItem({
 
         <button 
           onClick={() => onDeleteRequest(task.id, task.title)} 
-          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-neutral-600 hover:text-red-900/80 transition-all ml-2"
+          className="text-neutral-600 hover:text-red-500 transition-all ml-2"
           title="Delete permanent"
         >
           <Trash2 size={14} />
@@ -253,8 +253,12 @@ export default function TasksView({ initialTasks }: { initialTasks: Task[] }) {
       {/* Pop-up modal for task adding */}
       <AnimatePresence>
         {isAdding && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setIsAdding(false)}
+          >
             <motion.div 
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -318,8 +322,12 @@ export default function TasksView({ initialTasks }: { initialTasks: Task[] }) {
       {/* Pop-up modal for task deletion */}
       <AnimatePresence>
         {taskToDelete && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setTaskToDelete(null)}
+          >
             <motion.div 
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}

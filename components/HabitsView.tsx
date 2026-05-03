@@ -91,7 +91,7 @@ function HabitItem({
           >
             <Bell size={14} />
           </button>
-          <button onClick={() => setHabitToDelete(habit.id)} className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-neutral-600 hover:text-red-900/80 transition-all focus:outline-none">
+          <button onClick={() => setHabitToDelete(habit.id)} className="text-neutral-600 hover:text-red-500 transition-all focus:outline-none">
             <Trash2 size={14} />
           </button>
         </div>
@@ -401,8 +401,12 @@ export default function HabitsView({ initialHabits }: { initialHabits: HabitWith
 
       <AnimatePresence>
         {habitToDelete && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setHabitToDelete(null)}
+          >
             <motion.div 
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -440,8 +444,12 @@ export default function HabitsView({ initialHabits }: { initialHabits: HabitWith
 
       <AnimatePresence>
         {isAdding && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setIsAdding(false)}
+          >
             <motion.div 
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -517,8 +525,12 @@ function ReminderModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div 
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <motion.div 
+        onClick={(e) => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}

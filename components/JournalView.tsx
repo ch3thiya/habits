@@ -91,21 +91,13 @@ export default function JournalView({ initialJournals }: { initialJournals: Jour
   useEffect(() => setJournals(initialJournals), [initialJournals]);
 
   const handleCreate = async () => {
-    const tempId = `temp-${Date.now()}`;
-    const newEntry: Journal = {
-      id: tempId,
-      title: 'Untitled Entry',
-      content: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    setJournals([newEntry, ...journals]);
-    setActiveEntry(tempId);
-    setEditTitle(newEntry.title);
-    setEditContent(newEntry.content || '');
-
-    await addJournal(newEntry.title, newEntry.content || '');
+    const created = await addJournal('Untitled Entry', '');
+    if (created) {
+      setJournals(prev => [created, ...prev]);
+      setActiveEntry(created.id);
+      setEditTitle(created.title);
+      setEditContent(created.content || '');
+    }
   };
 
   const handleDeleteRequest = (e: React.MouseEvent, id: string, title: string) => {
@@ -145,8 +137,8 @@ export default function JournalView({ initialJournals }: { initialJournals: Jour
   const stripHtml = (html: string | null) => {
     if (!html) return 'No content';
     const tmp = document.createElement("DIV");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || "No content";
+    tmp.innerHTML = html.replace(/<\/(p|div|li|h[1-6])>/g, '</$1>\n').replace(/<br\s*[\/]?>/gi, '\n');
+    return (tmp.textContent || tmp.innerText || "No content").trim();
   };
 
   return (
@@ -183,7 +175,7 @@ export default function JournalView({ initialJournals }: { initialJournals: Jour
                   <div>
                     <h3 className="font-medium text-neutral-200 truncate">{journal.title}</h3>
                     <p className="text-xs text-neutral-500 mt-1 mb-3">{format(new Date(journal.updated_at), 'MMM d, yyyy h:mm a')}</p>
-                    <p className="text-sm text-neutral-400 line-clamp-3 leading-relaxed">
+                    <p className="text-sm text-neutral-400 line-clamp-3 leading-relaxed whitespace-pre-wrap">
                       {stripHtml(journal.content)}
                     </p>
                   </div>
@@ -225,6 +217,13 @@ export default function JournalView({ initialJournals }: { initialJournals: Jour
                 placeholder="Entry Title..."
                 className="bg-transparent text-2xl font-medium text-neutral-200 outline-none w-full placeholder:text-neutral-700"
               />
+              <button 
+                onClick={(e) => handleDeleteRequest(e, activeEntry, editTitle)}
+                className="text-neutral-600 hover:text-red-900/80 hover:bg-red-900/10 transition-colors p-2 rounded-md flex-shrink-0"
+                title="Delete Entry"
+              >
+                <Trash2 size={18} />
+              </button>
             </div>
             
             <div className="pl-9 pb-12">
@@ -243,8 +242,12 @@ export default function JournalView({ initialJournals }: { initialJournals: Jour
       {/* Pop-up modal for journal deletion */}
       <AnimatePresence>
         {journalToDelete && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm"
+            onClick={() => setJournalToDelete(null)}
+          >
             <motion.div 
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
