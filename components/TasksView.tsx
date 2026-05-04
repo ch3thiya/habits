@@ -140,7 +140,7 @@ function TaskItem({
 
         <button 
           onClick={() => onDeleteRequest(task.id, task.title)} 
-          className="text-neutral-600 hover:text-red-500 transition-all ml-2"
+          className="text-neutral-600 hover:text-red-500 transition-all ml-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100"
           title="Delete permanent"
         >
           <Trash2 size={14} />

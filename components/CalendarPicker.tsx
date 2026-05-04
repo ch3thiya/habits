@@ -96,5 +96,6 @@ export function CalendarPicker({
         </button>
       </div>
     </div>
+    </>
   );
 }

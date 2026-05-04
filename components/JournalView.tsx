@@ -30,6 +30,7 @@ function RichTextEditor({ content, onUpdate }: { content: string, onUpdate: (val
       }),
     ],
     content,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: 'prose prose-invert prose-neutral prose-sm sm:prose-base focus:outline-none max-w-none min-h-[400px]',
@@ -180,7 +181,7 @@ export default function JournalView({ initialJournals }: { initialJournals: Jour
                     </p>
                   </div>
                   
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     <button 
                       onClick={(e) => handleDeleteRequest(e, journal.id, journal.title)} 
                       className="text-neutral-600 hover:text-red-900/80 transition-all p-1"
@@ -219,7 +220,7 @@ export default function JournalView({ initialJournals }: { initialJournals: Jour
               />
               <button 
                 onClick={(e) => handleDeleteRequest(e, activeEntry, editTitle)}
-                className="text-neutral-600 hover:text-red-900/80 hover:bg-red-900/10 transition-colors p-2 rounded-md flex-shrink-0"
+                className="hidden"
                 title="Delete Entry"
               >
                 <Trash2 size={18} />

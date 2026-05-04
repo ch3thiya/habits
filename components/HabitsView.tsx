@@ -91,7 +91,7 @@ function HabitItem({
           >
             <Bell size={14} />
           </button>
-          <button onClick={() => setHabitToDelete(habit.id)} className="text-neutral-600 hover:text-red-500 transition-all focus:outline-none">
+          <button onClick={() => setHabitToDelete(habit.id)} className="text-neutral-600 hover:text-red-500 transition-all focus:outline-none opacity-0 group-hover:opacity-100 focus-within:opacity-100">
             <Trash2 size={14} />
           </button>
         </div>
